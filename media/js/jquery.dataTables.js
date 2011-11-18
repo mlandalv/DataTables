@@ -1259,6 +1259,13 @@
 			 * Scope:    jQuery.dataTable.classSettings
 			 */
 			this.sCookiePrefix = "SpryMedia_DataTables_";
+
+            /*
+			 * Variable: sCookiePath
+			 * Purpose:  Cookie path
+			 * Scope:    jQuery.dataTable.classSettings
+			 */
+            this.sCookiePath = null;
 			
 			/*
 			 * Variable: fnCookieCallback
@@ -6207,7 +6214,7 @@
 			for ( i=0 ; i<oSettings.aoPreSearchCols.length ; i++ )
 			{
 				sValue += '["'+encodeURIComponent(oSettings.aoPreSearchCols[i].sSearch)+
-					'",'+!oSettings.aoPreSearchCols[i].bRegex+'],';
+					'",'+!oSettings.aoPreSearchCols[i].bRegex+','+!oSettings.aoPreSearchCols[i].bSmart+'],';
 			}
 			sValue = sValue.substring(0, sValue.length-1);
 			sValue += "],";
@@ -6233,7 +6240,7 @@
 			sValue += "}";
 			
 			_fnCreateCookie( oSettings.sCookiePrefix+oSettings.sInstance, sValue, 
-				oSettings.iCookieDuration, oSettings.sCookiePrefix, oSettings.fnCookieCallback );
+				oSettings.iCookieDuration, oSettings.sCookiePrefix, oSettings.fnCookieCallback, oSettings.sCookiePath );
 		}
 		
 		/*
@@ -6251,7 +6258,7 @@
 			}
 			
 			var oData, i, iLen;
-			var sData = _fnReadCookie( oSettings.sCookiePrefix+oSettings.sInstance );
+			var sData = _fnReadCookie( oSettings.sCookiePrefix+oSettings.sInstance, oSettings.sCookiePath );
 			if ( sData !== null && sData !== '' )
 			{
 				/* Try/catch the JSON eval - if it is bad then we ignore it - note that 1.7.0 and before
@@ -6307,7 +6314,8 @@
 					{
 						oSettings.aoPreSearchCols[i] = {
 							"sSearch": decodeURIComponent(oData.aaSearchCols[i][0]),
-							"bRegex": !oData.aaSearchCols[i][1]
+							"bRegex": !oData.aaSearchCols[i][1],
+                            "bSmart": !oData.aaSearchCols[i][2]
 						};
 					}
 				}
@@ -6337,8 +6345,9 @@
 		 *           int:iSecs - duration of the cookie
 		 *           string:sBaseName - sName is made up of the base + file name - this is the base
 		 *           function:fnCallback - User definable function to modify the cookie
+         *           string:sPath - User defined cookie path or use default if not defined
 		 */
-		function _fnCreateCookie ( sName, sValue, iSecs, sBaseName, fnCallback )
+		function _fnCreateCookie ( sName, sValue, iSecs, sBaseName, fnCallback, sPath )
 		{
 			var date = new Date();
 			date.setTime( date.getTime()+(iSecs*1000) );
@@ -6349,7 +6358,7 @@
 			 * have to append the file name to the cookie name. Appalling. Thanks to vex for adding the
 			 * patch to use at least some of the path
 			 */
-			var aParts = window.location.pathname.split('/');
+			var aParts = sPath ? sPath.split('/') : window.location.pathname.split('/');
 			var sNameFile = sName + '_' + aParts.pop().replace(/[\/:]/g,"").toLowerCase();
 			var sFullCookie, oData;
 			
@@ -6408,11 +6417,12 @@
 		 * Purpose:  Read an old cookie to get a cookie with an old table state
 		 * Returns:  string: - contents of the cookie - or null if no cookie with that name found
 		 * Inputs:   string:sName - name of the cookie to read
+         *           string:sPath - User defined cookie path or null if not defined
 		 */
-		function _fnReadCookie ( sName )
+		function _fnReadCookie ( sName, sPath )
 		{
 			var
-				aParts = window.location.pathname.split('/'),
+				aParts = sPath ? sPath.split('/') : window.location.pathname.split('/'),
 				sNameEQ = sName + '_' + aParts[aParts.length-1].replace(/[\/:]/g,"").toLowerCase() + '=',
 			 	sCookieContents = document.cookie.split(';');
 			
@@ -7046,6 +7056,7 @@
 				_fnMap( oSettings, oInit, "sAjaxDataProp" );
 				_fnMap( oSettings, oInit, "iCookieDuration" );
 				_fnMap( oSettings, oInit, "sCookiePrefix" );
+                _fnMap( oSettings, oInit, "sCookiePath" );
 				_fnMap( oSettings, oInit, "sDom" );
 				_fnMap( oSettings, oInit, "bSortCellsTop" );
 				_fnMap( oSettings, oInit, "oSearch", "oPreviousSearch" );
