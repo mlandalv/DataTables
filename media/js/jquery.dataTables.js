@@ -4366,7 +4366,7 @@
 		 *  @param {function} fnCallback User definable function to modify the cookie
 		 *  @memberof DataTable#oApi
 		 */
-		function _fnCreateCookie ( sName, sValue, iSecs, sBaseName, fnCallback )
+		function _fnCreateCookie ( sName, sValue, iSecs, sBaseName, fnCallback, sPath )
 		{
 			var date = new Date();
 			date.setTime( date.getTime()+(iSecs*1000) );
@@ -4377,7 +4377,7 @@
 			 * have to append the file name to the cookie name. Appalling. Thanks to vex for adding the
 			 * patch to use at least some of the path
 			 */
-			var aParts = window.location.pathname.split('/');
+			var aParts = sPath ? sPath.split('/') : window.location.pathname.split('/');
 			var sNameFile = sName + '_' + aParts.pop().replace(/[\/:]/g,"").toLowerCase();
 			var sFullCookie, oData;
 			
@@ -4438,10 +4438,10 @@
 		 *  @returns {string} contents of the cookie - or null if no cookie with that name found
 		 *  @memberof DataTable#oApi
 		 */
-		function _fnReadCookie ( sName )
+		function _fnReadCookie ( sName, sPath )
 		{
 			var
-				aParts = window.location.pathname.split('/'),
+				aParts = sPath ? sPath.split('/') : window.location.pathname.split('/'),
 				sNameEQ = sName + '_' + aParts[aParts.length-1].replace(/[\/:]/g,"").toLowerCase() + '=',
 			 	sCookieContents = document.cookie.split(';');
 			
@@ -6284,6 +6284,7 @@
 			_fnMap( oSettings, oInit, "sAjaxDataProp" );
 			_fnMap( oSettings, oInit, "iCookieDuration" );
 			_fnMap( oSettings, oInit, "sCookiePrefix" );
+            _fnMap( oSettings, oInit, "sCookiePath" );
 			_fnMap( oSettings, oInit, "sDom" );
 			_fnMap( oSettings, oInit, "bSortCellsTop" );
 			_fnMap( oSettings, oInit, "iTabIndex" );
@@ -8619,7 +8620,7 @@
 		 *    } );
 		 */
 		"fnStateLoad": function ( oSettings ) {
-			var sData = this.oApi._fnReadCookie( oSettings.sCookiePrefix+oSettings.sInstance );
+			var sData = this.oApi._fnReadCookie( oSettings.sCookiePrefix+oSettings.sInstance, oSettings.sCookiePath );
 			var oData;
 	
 			try {
@@ -8721,7 +8722,8 @@
 				this.oApi._fnJsonString(oData), 
 				oSettings.iCookieDuration, 
 				oSettings.sCookiePrefix, 
-				oSettings.fnCookieCallback
+				oSettings.fnCookieCallback,
+                oSettings.sCookiePath
 			);
 		},
 	
@@ -9404,6 +9406,14 @@
 		 *    } );
 		 */
 		"sCookiePrefix": "SpryMedia_DataTables_",
+
+
+	    /**
+         * Override cookie path to allow same settings on different pages.
+         * @type string
+         * @default null
+         */
+		"sCookiePath": null,
 	
 	
 		/**
@@ -10839,6 +10849,8 @@
 		 *  @default <i>Empty string</i>
 		 */
 		"sCookiePrefix": "",
+
+        "sCookiePath": null,
 		
 		/**
 		 * Callback function for cookie creation.
